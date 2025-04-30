@@ -4,13 +4,12 @@ import com.microsoft.azure.functions.annotation.*;
 import com.microsoft.azure.functions.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Azure Function para consumir eventos de roles desde Event Grid
- */
 public class RolesFunction {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -29,7 +28,7 @@ public class RolesFunction {
         try (Connection conn = OracleDBConnection.getConnection()) {
             context.getLogger().info("Conexión a la base de datos establecida correctamente.");
 
-            JsonNode eventNode = objectMapper.readTree(event); // ya no array, directo
+            JsonNode eventNode = objectMapper.readTree(event);
             String eventType = eventNode.get("eventType").asText();
             JsonNode rolNode = eventNode.get("data");
 
@@ -103,21 +102,41 @@ public class RolesFunction {
 
     private void handleDeleteRol(JsonNode rolNode, Connection conn, ExecutionContext context) throws SQLException {
         int id = rolNode.has("id") ? rolNode.get("id").asInt() : 0;
-
+    
         if (id == 0) {
             context.getLogger().severe("Falta el campo 'id' para eliminar rol.");
             return;
         }
-
-        String query = "DELETE FROM roles WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, id);
-            int deleted = stmt.executeUpdate();
-            if (deleted == 0) {
-                context.getLogger().warning("Rol no encontrado para eliminar.");
+    
+        // 1. Obtener el ID del rol por defecto
+        int rolPorDefecto = 0;
+        String queryRolDefecto = "SELECT id FROM roles WHERE nombre = 'Usuario' FETCH FIRST 1 ROWS ONLY";
+        try (PreparedStatement stmt = conn.prepareStatement(queryRolDefecto)) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                rolPorDefecto = rs.getInt("id");
+                context.getLogger().info("Rol por defecto encontrado con ID: " + rolPorDefecto);
             } else {
-                context.getLogger().info("Rol eliminado exitosamente.");
+                context.getLogger().severe("No se encontró el rol por defecto.");
+                return;
             }
+        }
+    
+        // 2. Actualizar usuarios con ese rol al rol por defecto
+        String updateUsuarios = "UPDATE usuarios SET rol_id = ? WHERE rol_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(updateUsuarios)) {
+            stmt.setInt(1, rolPorDefecto);
+            stmt.setInt(2, id);
+            int afectados = stmt.executeUpdate();
+            context.getLogger().info("Usuarios actualizados con rol por defecto: " + afectados);
+        }
+    
+        // 3. Eliminar el rol
+        String deleteRol = "DELETE FROM roles WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(deleteRol)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+            context.getLogger().info("Rol eliminado exitosamente.");
         }
     }
 }
