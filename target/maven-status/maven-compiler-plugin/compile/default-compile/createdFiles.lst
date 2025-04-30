@@ -1,0 +1,6 @@
+com\rolesveterinaria\ConsultaRolesFunction.class
+com\rolesveterinaria\model\Rol.class
+com\rolesveterinaria\OracleDBConnection.class
+com\rolesveterinaria\config\GraphQLProvider.class
+com\rolesveterinaria\resolver\Query.class
+com\rolesveterinaria\RolesFunction.class

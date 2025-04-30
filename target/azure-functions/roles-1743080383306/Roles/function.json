@@ -1,0 +1,9 @@
+{
+  "scriptFile" : "../roles-1.0-SNAPSHOT.jar",
+  "entryPoint" : "com.rolesveterinaria.RolesFunction.run",
+  "bindings" : [ {
+    "type" : "eventGridTrigger",
+    "direction" : "in",
+    "name" : "event"
+  } ]
+}

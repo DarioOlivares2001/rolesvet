@@ -1,0 +1,5 @@
+bd   : CLOUDDB5
+
+user : ADMIN
+
+pass : OracleCloud123

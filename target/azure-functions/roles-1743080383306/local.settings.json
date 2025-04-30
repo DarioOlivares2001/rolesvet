@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "AzureWebJobsSecretStorageType": "Files",
+    "FUNCTIONS_WORKER_RUNTIME": "java",
+    "ORACLE_USER": "ADMIN",
+    "ORACLE_PASSWORD": "OracleCloud123",
+    "ORACLE_TNS_NAME": "zz4zym3bu0ucvq7r_high",
+    "ORACLE_WALLET_PATH": "/wallet"
+  }
+}
